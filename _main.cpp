@@ -11,14 +11,57 @@ using namespace std;
 
 #define Create_Comport "COM3"
 
+// > cut is white
+// < cut is black
+#define cut 650
+
 bool isRecord = true;
+int frontLeft, frontRight;
+
+CreateData	robotData;
+RobotConnector	robot;
+
+void updateData() {
+    if( !robot.ReadData(robotData) )
+        cout << "ReadData Fail" << endl;
+
+    frontLeft = robotData.cliffSignal[1];
+    frontRight = robotData.cliffSignal[2];
+}
+
+void walk(int vl, int vr) {
+    if( !robot.DriveDirect((int)(vl*Create_MaxVel), (int)(vr*Create_MaxVel)) )
+        cout << "SetControl Fail" << endl;
+}
+
+int findDirection(){
+    updateData();
+
+    // black and white
+    return (frontLeft < cut && frontRight > cut);
+}
+
+void printSensor() {
+    updateData();
+
+    for(int i = 0; i < 4; i++) {
+        cout << robotData.cliffSignal[i] << "\t";
+    }
+    cout << endl;
+}
+
+bool isWhite(int val) {
+    return (val > cut);
+}
+
+bool isBlack(int val) {
+    return (val < cut);
+}
 
 int main()
 {
-	CreateData	robotData;
-	RobotConnector	robot;
 
-	ofstream	record;
+    ofstream record;
 	record.open("../data/robot.txt");
 
 	if( !robot.Connect(Create_Comport) )
@@ -30,119 +73,89 @@ int main()
 	robot.DriveDirect(0, 0);
 	cvNamedWindow("Robot");
 
+
+    // wait key to start track line
 	char c = cvWaitKey(0);
-	bool clockwise = true;
 
-	int frontLeft = robotData.cliffSignal[2];
-	int frontRight = robotData.cliffSignal[1];
+    // find direction of robot
+    bool clockwise = findDirection();
 
 
-	for (int i = 0; i < 100; i++) {
-		if (frontLeft > 720 && frontRight < 650) {
-			clockwise = true;
-		}
-		else {
-			clockwise = false;
-		}
-	}
-
+    // default is counter clockwise
 	while(true)
 	{
-		char stop = cvWaitKey(30);
-		if (stop == 'b') break;
-		double vl = 0;
-		double vr = 0;
+		char btn = cvWaitKey(30);
+		if (btn == 'b') break;
 
-		frontLeft = robotData.cliffSignal[2];
-		frontRight = robotData.cliffSignal[1];
-		
-		if (stop == 't') {
-			if (clockwise) {
-				while (!(frontLeft > 720 && frontRight < 650)) {
-					frontLeft = robotData.cliffSignal[2];
-					frontRight = robotData.cliffSignal[1];
-					vl = -1;
-					vr = 1;
+		double vl = 0, vr = 0;
 
-					if (!robot.DriveDirect((int)(vl*Create_MaxVel), (int)(vr*Create_MaxVel)))
-						cout << "SetControl Fail" << endl;                   
+        updateData();
 
+        //////////////////////////////////////////////
+        // change direction of robot
+        //////////////////////////////////////////////
+		if (btn == 't') {
+            while(true) {
+                updateData();
+                vl = -1;
+                vr = 1;
 
-					if (!robot.ReadData(robotData))
-						cout << "ReadData Fail" << endl;
+                walk(vl, vr);
+                cvWaitKey(30);
 
+                if ( clockwise && isWhite(frontLeft) && isBlack(frontRight))
+                    break;
 
-					cout << frontLeft << " " << frontRight << endl;
-					cvWaitKey(30);
+                if (!clockwise && isBlack(frontLeft) && isWhite(frontRight))
+                    break;
 
-				}
-
-			}
-			else {
-				while (!(frontRight > 720 && frontLeft < 650)) {
-					frontLeft = robotData.cliffSignal[2];
-					frontRight = robotData.cliffSignal[1];
-
-					vl = -1;
-					vr = 1;
-					if (!robot.DriveDirect((int)(vl*Create_MaxVel), (int)(vr*Create_MaxVel)))
-						cout << "SetControl Fail" << endl;
-
-
-					if (!robot.ReadData(robotData))
-						cout << "ReadData Fail" << endl;
-
-					cout << frontLeft << " " << frontRight << endl;
-
-					cvWaitKey(30);
-				}
-			}		
+            }
 			clockwise = !clockwise;
 		}
+		//////////////////////////////////////////////
 
-		if (frontLeft > 720 && frontRight < 650) {
+
+
+        //////////////////////////////////////////////
+        // control (left, right and up
+        //////////////////////////////////////////////
+		// WHITE AND BLACK
+		if (isWhite(frontLeft) ^ isWhite(frontRight)) {
 			vl = 2;
 			vr = 2;
 		}
-
-		if (frontLeft < 720 && frontRight > 650) {
-			vl = 2;
-			vr = 2;
+        // BOTH BLACK
+		if (isBlack(frontLeft) && isBlack(frontRight)) {
+            vl = 1;
+            vr = 0.5;
+		}
+        // BOTH WHITE
+		if (isWhite(frontLeft) && isWhite(frontRight)) {
+            vl = 0.5;
+            vr = 1;
 		}
 
-		if (frontLeft < 700 && frontRight < 600) {
-			if (clockwise) {
-				vl = 0.5;
-				vr = 1;
-			}
-			else {
-				vl = 1;
-				vr = 0.5;
-			}
+
+        //////////////////////////////////////////////
+        // swap velocity of each wheel if direction of robot is clockwise
+        //////////////////////////////////////////////
+		if(clockwise) {
+            double temp = vl;
+            vl = vr;
+            vr = temp;
 		}
 
-		if (frontLeft > 700 && frontRight > 600) {
-			if (clockwise) {
-				vl = 1;
-				vr = 0.5;
-			}
-			else {
-				vl = 0.5;
-				vr = 1;
-			}
-		}		
 
-		int velL = (int)(vl*Create_MaxVel);
-		int velR = (int)(vr*Create_MaxVel);
+        //////////////////////////////////////////////
+        // walk
+        //////////////////////////////////////////////
+        walk(vl, vr);
 
-		
-		if( !robot.DriveDirect(velL, velR) )
-			cout << "SetControl Fail" << endl;
 
-		if( !robot.ReadData(robotData) )
-			cout << "ReadData Fail" << endl;
-
-		cout << robotData.cliffSignal[0] << "\t" << robotData.cliffSignal[1] << "\t" << robotData.cliffSignal[2] << "\t" << robotData.cliffSignal[3] << endl;
+        //////////////////////////////////////////////
+        // show value of cliff sensor
+        //////////////////////////////////////////////
+        printSensor();
 	}
 
 	robot.Disconnect();
