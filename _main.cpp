@@ -11,7 +11,7 @@ using namespace std;
 
 #define Create_Comport "COM3"
 
-bool isRecord = false;
+bool isRecord = true;
 
 int main()
 {
@@ -30,40 +30,111 @@ int main()
 	robot.DriveDirect(0, 0);
 	cvNamedWindow("Robot");
 
+	char c = cvWaitKey(0);
+	bool clockwise = true;
+
+	int frontLeft = robotData.cliffSignal[2];
+	int frontRight = robotData.cliffSignal[1];
+
+
+	for (int i = 0; i < 100; i++) {
+		if (frontLeft > 720 && frontRight < 650) {
+			clockwise = true;
+		}
+		else {
+			clockwise = false;
+		}
+	}
 
 	while(true)
 	{
-		char c = cvWaitKey(30);
-		if( c == 27 ) break;
-	
-		double vx, vz;
-		vx = vz = 0.0;
+		char stop = cvWaitKey(30);
+		if (stop == 'b') break;
+		double vl = 0;
+		double vr = 0;
 
-		switch(c)
-		{
-		case 'w': vx = +1; break;
-		case 's': vx = -1; break;
-		case 'a': vz = +1; break;
-		case 'd': vz = -1; break;
-		case ' ': vx = vz = 0; break;
-		case 'c': robot.Connect(Create_Comport); break;
+		frontLeft = robotData.cliffSignal[2];
+		frontRight = robotData.cliffSignal[1];
+		
+		if (stop == 't') {
+			if (clockwise) {
+				while (!(frontLeft > 720 && frontRight < 650)) {
+					frontLeft = robotData.cliffSignal[2];
+					frontRight = robotData.cliffSignal[1];
+					vl = -1;
+					vr = 1;
+
+					if (!robot.DriveDirect((int)(vl*Create_MaxVel), (int)(vr*Create_MaxVel)))
+						cout << "SetControl Fail" << endl;                   
+
+
+					if (!robot.ReadData(robotData))
+						cout << "ReadData Fail" << endl;
+
+
+					cout << frontLeft << " " << frontRight << endl;
+					cvWaitKey(30);
+
+				}
+
+			}
+			else {
+				while (!(frontRight > 720 && frontLeft < 650)) {
+					frontLeft = robotData.cliffSignal[2];
+					frontRight = robotData.cliffSignal[1];
+
+					vl = -1;
+					vr = 1;
+					if (!robot.DriveDirect((int)(vl*Create_MaxVel), (int)(vr*Create_MaxVel)))
+						cout << "SetControl Fail" << endl;
+
+
+					if (!robot.ReadData(robotData))
+						cout << "ReadData Fail" << endl;
+
+					cout << frontLeft << " " << frontRight << endl;
+
+					cvWaitKey(30);
+				}
+			}		
+			clockwise = !clockwise;
 		}
 
-		double vl = vx - vz;
-		double vr = vx + vz;
+		if (frontLeft > 720 && frontRight < 650) {
+			vl = 2;
+			vr = 2;
+		}
+
+		if (frontLeft < 720 && frontRight > 650) {
+			vl = 2;
+			vr = 2;
+		}
+
+		if (frontLeft < 700 && frontRight < 600) {
+			if (clockwise) {
+				vl = 0.5;
+				vr = 1;
+			}
+			else {
+				vl = 1;
+				vr = 0.5;
+			}
+		}
+
+		if (frontLeft > 700 && frontRight > 600) {
+			if (clockwise) {
+				vl = 1;
+				vr = 0.5;
+			}
+			else {
+				vl = 0.5;
+				vr = 1;
+			}
+		}		
 
 		int velL = (int)(vl*Create_MaxVel);
 		int velR = (int)(vr*Create_MaxVel);
 
-		int color = (abs(velL)+abs(velR))/4;
-		color = (color < 0) ? 0 : (color > 255) ? 255 : color;
-
-		int inten = (robotData.cliffSignal[1] + robotData.cliffSignal[2])/8 - 63;
-		inten = (inten < 0) ? 0 : (inten > 255) ? 255 : inten;
-
-		//cout << color << " " << inten << " " << robotData.cliffSignal[1] << " " << robotData.cliffSignal[2] << endl;
-
-		robot.LEDs(velL > 0, velR > 0, color, inten);
 		
 		if( !robot.DriveDirect(velL, velR) )
 			cout << "SetControl Fail" << endl;
@@ -71,10 +142,7 @@ int main()
 		if( !robot.ReadData(robotData) )
 			cout << "ReadData Fail" << endl;
 
-		if( isRecord )
-			record << robotData.cliffSignal[0] << "\t" << robotData.cliffSignal[1] << "\t" << robotData.cliffSignal[2] << "\t" << robotData.cliffSignal[3] << endl;
-		
-		cout << "Robot " << robotData.infrared << endl;
+		cout << robotData.cliffSignal[0] << "\t" << robotData.cliffSignal[1] << "\t" << robotData.cliffSignal[2] << "\t" << robotData.cliffSignal[3] << endl;
 	}
 
 	robot.Disconnect();
