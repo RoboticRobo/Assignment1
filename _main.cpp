@@ -17,8 +17,8 @@ using namespace std;
 
 bool isRecord = true;
 int frontLeft, frontRight, lefts, rights;
-//int rounds[5];
-//int turns = 0;
+int rounds[6];
+int turns = 0;
 
 CreateData robotData;
 RobotConnector robot;
@@ -128,10 +128,6 @@ bool findPath()
 		if ((robotData.bumper[0] || robotData.bumper[1]))
 			return false;
 	}
-	/* while (!(isBlack(frontLeft, 1) && isBlack(frontRight, 2) && isBlack(lefts, 0) && isBlack(rights, 3)))
-	{
-	walk(1, 1);
-	} */
 	while (!(isWhite(frontLeft, 1) && isWhite(frontRight, 2)))
 	{
 		cout << "white 2" << endl;
@@ -166,11 +162,12 @@ int main()
 	cvNamedWindow("Robot");
 
 
-	//rounds[0] = 0;
-	//rounds[1] = 0;
-	//rounds[2] = 0;
-	//rounds[3] = 0;
-	//rounds[4] = 0;
+	rounds[0] = 0;
+	rounds[1] = 0;
+	rounds[2] = 0;
+	rounds[3] = 0;
+	rounds[4] = 0;
+	rounds[5] = 0;
 
 	// wait key to start track line
 	char c = cvWaitKey(0);
@@ -230,8 +227,6 @@ int main()
 		// BOTH BLACK
 		if (isBlack(frontLeft, 1) && isBlack(frontRight, 2) && isBlack(lefts, 0) && isBlack(rights, 3))
 		{
-			// cout << "all black" b<< endl;
-
 			while (true)
 			{
 				updateData();
@@ -251,8 +246,7 @@ int main()
 
 				if ((isWhite(frontLeft, 1) && isWhite(frontRight, 2)) || (isWhite(frontLeft, 1) != isWhite(frontRight, 2)))
 				{
-					//turns += 1;
-				//	if (turns > 4) turns = 4;
+					turns += 1;
 					break;
 				}
 			}
@@ -271,8 +265,8 @@ int main()
 		// WHITE AND BLACK
 		else if (isWhite(frontLeft, 1) != isWhite(frontRight, 2))
 		{
-			vl = 2;
-			vr = 2;
+			vl = 1;
+			vr = 1;
 		}
 
 		//////////////////////////////////////////////
@@ -288,12 +282,14 @@ int main()
 		//////////////////////////////////////////////
 		// walk
 		//////////////////////////////////////////////
+		if(turns > 4)
+			break;
 		walk(vl, vr);
-		//rounds[turns] += 1;
+		rounds[turns] += 1;
 		
-//		if (turns == 4 && rounds[4] > (rounds[2] - rounds[0] + 20)  ) {
-	//		break;
-		//}
+		if (turns == 4 && rounds[4] > (rounds[2] - rounds[0]) ) {
+			break;
+		}
 
 		updateData();
 		//////////////////////////////////////////////
@@ -301,7 +297,6 @@ int main()
 		//////////////////////////////////////////////
 		//printSensor();
 	}
-	cvWaitKey(0);
 
 	robot.Disconnect();
 
