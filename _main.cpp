@@ -220,6 +220,7 @@ int main()
 				if (!clockwise && isBlack(frontLeft, 1) && isWhite(frontRight, 2))
 					break;
 			}
+			clockwise = !clockwise;
 		}
 		//////////////////////////////////////////////
 
