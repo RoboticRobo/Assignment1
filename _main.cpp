@@ -17,6 +17,8 @@ using namespace std;
 
 bool isRecord = true;
 int frontLeft, frontRight, lefts, rights;
+//int rounds[5];
+//int turns = 0;
 
 CreateData robotData;
 RobotConnector robot;
@@ -28,8 +30,8 @@ void updateData()
 	if (!robot.ReadData(robotData))
 		cout << "ReadData Fail" << endl;
 
-	frontLeft = robotData.cliffSignal[1];
 	frontRight = robotData.cliffSignal[2];
+	frontLeft = robotData.cliffSignal[1];
 	lefts = robotData.cliffSignal[0];
 	rights = robotData.cliffSignal[3];
 }
@@ -85,47 +87,66 @@ bool findPath()
 {
 	while (!(robotData.bumper[0] || robotData.bumper[1]))
 	{
-		updateData();
 		walk(1, 1);
+		updateData();
 	}
 
 	// walk back
-	for (int i = 0; i < 5000; i++)
-	{
-		walk(-1, -1);
-	}
+	walk(-1, -1);
+	cvWaitKey(500);
+	updateData();
 
 	// spin 5 sec
-	for (int i = 0; i < 5000; i++)
-	{
-		walk(1, -1);
-	}
-	walk(0, 0);
+	walk(1, -1);
+	cvWaitKey(800);
+	updateData();
 
 	/* while (!(isBlack(frontLeft, 1) && isBlack(frontRight, 2) && isBlack(lefts, 0) && isBlack(rights, 3)))
 	{
-		walk(1, 1);
+	walk(1, 1);
 	} */
+	while (!(isBlack(frontLeft, 1) && isBlack(frontRight, 2) && isBlack(lefts, 0) && isBlack(rights, 3)))
+	{
+		cout << "black 1" << endl;
+		walk(1, 1);
+		updateData();
+		if ((robotData.bumper[0] || robotData.bumper[1]))
+			return false;
+	}
 	while (!(isWhite(frontLeft, 1) && isWhite(frontRight, 2) && isWhite(lefts, 0) && isWhite(rights, 3)))
 	{
+		cout << "white 1" << endl;
 		walk(1, 1);
+		updateData();
+		if ((robotData.bumper[0] || robotData.bumper[1]))
+			return false;
+	}
+	while (!(isBlack(frontLeft, 1) && isBlack(frontRight, 2) && isBlack(lefts, 0) && isBlack(rights, 3))) {
+		cout << "black 2" << endl;
+		walk(1, 1);
+		updateData();
 		if ((robotData.bumper[0] || robotData.bumper[1]))
 			return false;
 	}
 	/* while (!(isBlack(frontLeft, 1) && isBlack(frontRight, 2) && isBlack(lefts, 0) && isBlack(rights, 3)))
 	{
-		walk(1, 1);
+	walk(1, 1);
 	} */
 	while (!(isWhite(frontLeft, 1) && isWhite(frontRight, 2)))
 	{
+		cout << "white 2" << endl;
 		walk(1, 1);
+		updateData();
 		if ((robotData.bumper[0] || robotData.bumper[1]))
 			return false;
 	}
-	while (isWhite(frontLeft, 1) != isWhite(frontRight, 2))
+	while (isWhite(frontLeft, 1) == isWhite(frontRight, 2))
 	{
+		cout << "rotate" << endl;
 		walk(1, -1);
+		updateData();
 	}
+
 	return true;
 }
 
@@ -143,6 +164,13 @@ int main()
 
 	robot.DriveDirect(0, 0);
 	cvNamedWindow("Robot");
+
+
+	//rounds[0] = 0;
+	//rounds[1] = 0;
+	//rounds[2] = 0;
+	//rounds[3] = 0;
+	//rounds[4] = 0;
 
 	// wait key to start track line
 	char c = cvWaitKey(0);
@@ -192,7 +220,6 @@ int main()
 				if (!clockwise && isBlack(frontLeft, 1) && isWhite(frontRight, 2))
 					break;
 			}
-			clockwise = !clockwise;
 		}
 		//////////////////////////////////////////////
 
@@ -200,10 +227,10 @@ int main()
 		// control (left, right and up
 		//////////////////////////////////////////////
 		// BOTH BLACK
-		cout << lefts << " " << frontLeft << " " << frontRight << " " << rights << endl;
 		if (isBlack(frontLeft, 1) && isBlack(frontRight, 2) && isBlack(lefts, 0) && isBlack(rights, 3))
 		{
 			// cout << "all black" b<< endl;
+
 			while (true)
 			{
 				updateData();
@@ -223,6 +250,8 @@ int main()
 
 				if ((isWhite(frontLeft, 1) && isWhite(frontRight, 2)) || (isWhite(frontLeft, 1) != isWhite(frontRight, 2)))
 				{
+					//turns += 1;
+				//	if (turns > 4) turns = 4;
 					break;
 				}
 			}
@@ -230,12 +259,12 @@ int main()
 		else if (isBlack(frontLeft, 1) && isBlack(frontRight, 2))
 		{
 			vl = 1;
-			vr = 0.65;
+			vr = 0.55;
 		}
 		// BOTH WHITE
 		else if (isWhite(frontLeft, 1) && isWhite(frontRight, 2))
 		{
-			vl = 0.65;
+			vl = 0.55;
 			vr = 1;
 		}
 		// WHITE AND BLACK
@@ -259,6 +288,11 @@ int main()
 		// walk
 		//////////////////////////////////////////////
 		walk(vl, vr);
+		//rounds[turns] += 1;
+		
+//		if (turns == 4 && rounds[4] > (rounds[2] - rounds[0] + 20)  ) {
+	//		break;
+		//}
 
 		updateData();
 		//////////////////////////////////////////////
