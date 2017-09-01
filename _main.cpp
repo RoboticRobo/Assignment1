@@ -93,12 +93,12 @@ bool findPath()
 
 	// walk back
 	walk(-1, -1);
-	cvWaitKey(500);
+	cvWaitKey(300);
 	updateData();
 
 	// spin 5 sec
 	walk(1, -1);
-	cvWaitKey(800);
+	cvWaitKey(600);
 	updateData();
 
 	/* while (!(isBlack(frontLeft, 1) && isBlack(frontRight, 2) && isBlack(lefts, 0) && isBlack(rights, 3)))
@@ -257,12 +257,12 @@ int main()
 		else if (isBlack(frontLeft, 1) && isBlack(frontRight, 2))
 		{
 			vl = 1;
-			vr = 0.5;
+			vr = 0.6;
 		}
 		// BOTH WHITE
 		else if (isWhite(frontLeft, 1) && isWhite(frontRight, 2))
 		{
-			vl = 0.5;
+			vl = 0.6;
 			vr = 1;
 		}
 		// WHITE AND BLACK
@@ -292,6 +292,7 @@ int main()
 
 		if (turns == 4 && rounds[4] > (rounds[2] - rounds[0]))
 		{
+			cout << rounds[0] << " " << rounds[1] << " " << rounds[2] << " " << rounds[3] << " " << rounds[4] << endl;
 			break;
 		}
 
