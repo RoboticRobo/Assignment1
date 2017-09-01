@@ -121,7 +121,8 @@ bool findPath()
 		if ((robotData.bumper[0] || robotData.bumper[1]))
 			return false;
 	}
-	while (!(isBlack(frontLeft, 1) && isBlack(frontRight, 2) && isBlack(lefts, 0) && isBlack(rights, 3))) {
+	while (!(isBlack(frontLeft, 1) && isBlack(frontRight, 2) && isBlack(lefts, 0) && isBlack(rights, 3)))
+	{
 		cout << "black 2" << endl;
 		walk(1, 1);
 		updateData();
@@ -160,7 +161,6 @@ int main()
 
 	robot.DriveDirect(0, 0);
 	cvNamedWindow("Robot");
-
 
 	rounds[0] = 0;
 	rounds[1] = 0;
@@ -234,11 +234,11 @@ int main()
 				if (clockwise)
 				{
 					vl = 1;
-					vr = 0.2;
+					vr = 0.35;
 				}
 				else
 				{
-					vl = 0.2;
+					vl = 0.35;
 					vr = 1;
 				}
 
@@ -246,7 +246,10 @@ int main()
 
 				if ((isWhite(frontLeft, 1) && isWhite(frontRight, 2)) || (isWhite(frontLeft, 1) != isWhite(frontRight, 2)))
 				{
+					cvWaitKey(50);
 					turns += 1;
+					//turns += 1;
+					//	if (turns > 4) turns = 4;
 					break;
 				}
 			}
@@ -254,12 +257,12 @@ int main()
 		else if (isBlack(frontLeft, 1) && isBlack(frontRight, 2))
 		{
 			vl = 1;
-			vr = 0.55;
+			vr = 0.5;
 		}
 		// BOTH WHITE
 		else if (isWhite(frontLeft, 1) && isWhite(frontRight, 2))
 		{
-			vl = 0.55;
+			vl = 0.5;
 			vr = 1;
 		}
 		// WHITE AND BLACK
@@ -282,12 +285,13 @@ int main()
 		//////////////////////////////////////////////
 		// walk
 		//////////////////////////////////////////////
-		if(turns > 4)
+		if (turns > 4)
 			break;
 		walk(vl, vr);
 		rounds[turns] += 1;
-		
-		if (turns == 4 && rounds[4] > (rounds[2] - rounds[0]) ) {
+
+		if (turns == 4 && rounds[4] > (rounds[2] - rounds[0]))
+		{
 			break;
 		}
 
