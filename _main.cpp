@@ -220,6 +220,7 @@ int main()
 				if (!clockwise && isBlack(frontLeft, 1) && isWhite(frontRight, 2))
 					break;
 			}
+			clockwise = !clockwise;
 		}
 		//////////////////////////////////////////////
 
@@ -238,11 +239,11 @@ int main()
 				if (clockwise)
 				{
 					vl = 1;
-					vr = 0.2;
+					vr = 0.35;
 				}
 				else
 				{
-					vl = 0.2;
+					vl = 0.35;
 					vr = 1;
 				}
 
@@ -251,7 +252,8 @@ int main()
 				if ((isWhite(frontLeft, 1) && isWhite(frontRight, 2)) || (isWhite(frontLeft, 1) != isWhite(frontRight, 2)))
 				{
 					//turns += 1;
-				//	if (turns > 4) turns = 4;
+					//	if (turns > 4) turns = 4;
+					cvWaitKey(50);
 					break;
 				}
 			}
@@ -259,12 +261,12 @@ int main()
 		else if (isBlack(frontLeft, 1) && isBlack(frontRight, 2))
 		{
 			vl = 1;
-			vr = 0.55;
+			vr = 0.5;
 		}
 		// BOTH WHITE
 		else if (isWhite(frontLeft, 1) && isWhite(frontRight, 2))
 		{
-			vl = 0.55;
+			vl = 0.5;
 			vr = 1;
 		}
 		// WHITE AND BLACK
@@ -289,9 +291,9 @@ int main()
 		//////////////////////////////////////////////
 		walk(vl, vr);
 		//rounds[turns] += 1;
-		
-//		if (turns == 4 && rounds[4] > (rounds[2] - rounds[0] + 20)  ) {
-	//		break;
+
+		//		if (turns == 4 && rounds[4] > (rounds[2] - rounds[0] + 20)  ) {
+		//		break;
 		//}
 
 		updateData();
